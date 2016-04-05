@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3F0D3E3C1CB359AA007254E1 /* iReSignAndVerify.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F0D3E3B1CB359AA007254E1 /* iReSignAndVerify.m */; };
 		4C8EAD45185B74B90095DC6B /* IRHelpWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C8EAD44185B74B90095DC6B /* IRHelpWindow.m */; };
 		5B9E4C4C166AB3F7006D9F8F /* IRTextFieldDrag.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B9E4C4B166AB3F7006D9F8F /* IRTextFieldDrag.m */; };
 		C115EE2B13815024003B9ACC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C115EE2A13815024003B9ACC /* Cocoa.framework */; };
@@ -19,6 +20,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3F0D3E3A1CB359AA007254E1 /* iReSignAndVerify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iReSignAndVerify.h; sourceTree = "<group>"; };
+		3F0D3E3B1CB359AA007254E1 /* iReSignAndVerify.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = iReSignAndVerify.m; sourceTree = "<group>"; };
 		4C8EAD43185B74B90095DC6B /* IRHelpWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IRHelpWindow.h; sourceTree = "<group>"; };
 		4C8EAD44185B74B90095DC6B /* IRHelpWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IRHelpWindow.m; sourceTree = "<group>"; };
 		5B9E4C4A166AB3F7006D9F8F /* IRTextFieldDrag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IRTextFieldDrag.h; sourceTree = "<group>"; };
@@ -100,6 +103,8 @@
 				4C8EAD43185B74B90095DC6B /* IRHelpWindow.h */,
 				4C8EAD44185B74B90095DC6B /* IRHelpWindow.m */,
 				C115EE3113815024003B9ACC /* Supporting Files */,
+				3F0D3E3A1CB359AA007254E1 /* iReSignAndVerify.h */,
+				3F0D3E3B1CB359AA007254E1 /* iReSignAndVerify.m */,
 			);
 			path = iReSign;
 			sourceTree = "<group>";
@@ -187,6 +192,7 @@
 				4C8EAD45185B74B90095DC6B /* IRHelpWindow.m in Sources */,
 				C115EE3E13815024003B9ACC /* iReSignAppDelegate.m in Sources */,
 				5B9E4C4C166AB3F7006D9F8F /* IRTextFieldDrag.m in Sources */,
+				3F0D3E3C1CB359AA007254E1 /* iReSignAndVerify.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -19,33 +19,41 @@
     NSTask *unzipTask;
     NSTask *copyTask;
     NSTask *provisioningTask;
-    NSTask *codesignTask;
     NSTask *generateEntitlementsTask;
-    NSTask *verifyTask;
+    
     NSTask *zipTask;
     NSString *sourcePath;
-    NSString *appPath;
-    NSString *frameworksDirPath;
-    NSString *frameworkPath;
+    
     NSString *workingPath;
     NSString *appName;
     NSString *fileName;
     
-    NSString *entitlementsResult;
-    NSString *codesigningResult;
-    NSString *verificationResult;
-    
-    NSMutableArray *frameworks;
-    Boolean hasFrameworks;
     
     IBOutlet IRTextFieldDrag *pathField;
     IBOutlet IRTextFieldDrag *provisioningPathField;
+    
+    IBOutlet IRTextFieldDrag *watchAppProvisioningPathField;
+    IBOutlet IRTextFieldDrag *watchExtensionProvisioningPathField;
+    
     IBOutlet IRTextFieldDrag *entitlementField;
+    IBOutlet IRTextFieldDrag *watchAppEntitlementField;
+    IBOutlet IRTextFieldDrag *watchExtensionEntitlementField;
+    
+    
     IBOutlet IRTextFieldDrag *bundleIDField;
     IBOutlet NSButton    *browseButton;
     IBOutlet NSButton    *provisioningBrowseButton;
+    
+    IBOutlet NSButton    *watchAppProvisioningBrowseButton;
+    IBOutlet NSButton    *watchExtensionProvisioningBrowseButton;
+    
     IBOutlet NSButton *entitlementBrowseButton;
+    
+    IBOutlet NSButton *watchEntitlementBrowseButton;
+    IBOutlet NSButton *watchExtensionEntitlementBrowseButton;
+    
     IBOutlet NSButton    *resignButton;
+    
     IBOutlet NSTextField *statusLabel;
     IBOutlet NSProgressIndicator *flurry;
     IBOutlet NSButton *changeBundleIDCheckbox;
@@ -64,6 +72,10 @@
 - (IBAction)resign:(id)sender;
 - (IBAction)browse:(id)sender;
 - (IBAction)provisioningBrowse:(id)sender;
+
+- (IBAction)watchAppProvisioningBrowse:(id)sender;
+- (IBAction)watchExtensionProvisioningBrowse:(id)sender;
+
 - (IBAction)entitlementBrowse:(id)sender;
 - (IBAction)changeBundleIDPressed:(id)sender;
 
@@ -72,9 +84,7 @@
 - (void)doProvisioning;
 - (void)checkProvisioning:(NSTimer *)timer;
 - (void)doCodeSigning;
-- (void)checkCodesigning:(NSTimer *)timer;
-- (void)doVerifySignature;
-- (void)checkVerificationProcess:(NSTimer *)timer;
+
 - (void)doZip;
 - (void)checkZip:(NSTimer *)timer;
 - (void)disableControls;

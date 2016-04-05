@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="14D87h" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="10116" systemVersion="15E65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="10116"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -75,16 +75,16 @@
         </menu>
         <window title="iReSign" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" showsToolbarButton="NO" animationBehavior="default" id="371">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-            <rect key="contentRect" x="0.0" y="405" width="333" height="201"/>
+            <rect key="contentRect" x="0.0" y="405" width="364" height="329"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
             <value key="minSize" type="size" width="333" height="201"/>
             <value key="maxSize" type="size" width="666" height="402"/>
             <view key="contentView" id="372">
-                <rect key="frame" x="0.0" y="0.0" width="333" height="201"/>
+                <rect key="frame" x="0.0" y="0.0" width="364" height="329"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <textField verticalHuggingPriority="750" id="533" customClass="IRTextFieldDrag">
-                        <rect key="frame" x="20" y="166" width="208" height="22"/>
+                        <rect key="frame" x="20" y="294" width="230" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="/path/to/app.ipa or /path/to/app.xcarchive" drawsBackground="YES" id="534">
                             <font key="font" metaFont="system"/>
@@ -95,20 +95,8 @@
                             <outlet property="nextKeyView" destination="535" id="583"/>
                         </connections>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="543" customClass="IRTextFieldDrag">
-                        <rect key="frame" x="20" y="106" width="208" height="22"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="/path/to/entitlements.plist" drawsBackground="YES" id="544">
-                            <font key="font" metaFont="system"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                        <connections>
-                            <outlet property="nextKeyView" destination="595" id="599"/>
-                        </connections>
-                    </textField>
                     <button verticalHuggingPriority="750" id="535">
-                        <rect key="frame" x="230" y="159" width="96" height="32"/>
+                        <rect key="frame" x="252" y="287" width="98" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Browse" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="536">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -120,7 +108,7 @@
                         </connections>
                     </button>
                     <textField verticalHuggingPriority="750" id="563" customClass="IRTextFieldDrag">
-                        <rect key="frame" x="20" y="136" width="208" height="22"/>
+                        <rect key="frame" x="20" y="264" width="230" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="/path/to/.mobileprovision" drawsBackground="YES" id="566">
                             <font key="font" metaFont="system"/>
@@ -132,7 +120,7 @@
                         </connections>
                     </textField>
                     <button verticalHuggingPriority="750" id="564">
-                        <rect key="frame" x="230" y="129" width="96" height="32"/>
+                        <rect key="frame" x="252" y="257" width="98" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Browse" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="565">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -140,11 +128,71 @@
                         </buttonCell>
                         <connections>
                             <action selector="provisioningBrowse:" target="494" id="571"/>
-                            <outlet property="nextKeyView" destination="543" id="609"/>
+                            <outlet property="nextKeyView" destination="hge-cp-kCJ" id="xXM-aW-NnA"/>
                         </connections>
                     </button>
+                    <textField verticalHuggingPriority="750" id="hge-cp-kCJ" customClass="IRTextFieldDrag">
+                        <rect key="frame" x="20" y="234" width="230" height="22"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="/path/to/watchkitapp.mobileprovision" drawsBackground="YES" id="kif-4M-Oht">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="xbK-rX-hzw" id="vny-sb-WTq"/>
+                        </connections>
+                    </textField>
+                    <button verticalHuggingPriority="750" id="xbK-rX-hzw">
+                        <rect key="frame" x="252" y="227" width="98" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="push" title="Browse" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="p2P-If-p2s">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="watchAppProvisioningBrowse:" target="494" id="pyF-dY-R3Q"/>
+                            <outlet property="nextKeyView" destination="05r-jE-971" id="eWr-CV-h1T"/>
+                        </connections>
+                    </button>
+                    <textField verticalHuggingPriority="750" id="05r-jE-971" customClass="IRTextFieldDrag">
+                        <rect key="frame" x="20" y="204" width="230" height="22"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="/path/to/watchkitextension.mobileprovision" drawsBackground="YES" id="U0r-X4-kbz">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="IXT-ue-B1t" id="XEF-vF-9Ew"/>
+                        </connections>
+                    </textField>
+                    <button verticalHuggingPriority="750" id="IXT-ue-B1t">
+                        <rect key="frame" x="252" y="197" width="98" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="push" title="Browse" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="DWn-fx-3Ym">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="watchExtensionProvisioningBrowse:" target="494" id="KkQ-pz-PWq"/>
+                            <outlet property="nextKeyView" destination="543" id="l2j-pJ-UuJ"/>
+                        </connections>
+                    </button>
+                    <textField verticalHuggingPriority="750" id="543" customClass="IRTextFieldDrag">
+                        <rect key="frame" x="20" y="174" width="230" height="22"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="/path/to/entitlements.plist" drawsBackground="YES" id="544">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="595" id="bI0-0l-DvY"/>
+                        </connections>
+                    </textField>
                     <button verticalHuggingPriority="750" id="595">
-                        <rect key="frame" x="230" y="99" width="96" height="32"/>
+                        <rect key="frame" x="252" y="167" width="98" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Browse" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="596">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -152,31 +200,83 @@
                         </buttonCell>
                         <connections>
                             <action selector="entitlementBrowse:" target="494" id="606"/>
-                            <outlet property="nextKeyView" destination="572" id="610"/>
+                            <outlet property="nextKeyView" destination="iPi-p3-zjZ" id="d8L-rC-2Pp"/>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" id="539">
-                        <rect key="frame" x="230" y="5" width="96" height="32"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="ReSign!" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="540">
+                    <textField verticalHuggingPriority="750" id="iPi-p3-zjZ" customClass="IRTextFieldDrag">
+                        <rect key="frame" x="20" y="144" width="230" height="22"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="/path/to/watch_entitlements.plist" drawsBackground="YES" id="mvm-u5-Wo7">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="cMX-79-tv4" id="9E2-lp-B0R"/>
+                        </connections>
+                    </textField>
+                    <button verticalHuggingPriority="750" id="cMX-79-tv4">
+                        <rect key="frame" x="252" y="137" width="98" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="push" title="Browse" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="4Ny-D8-OCI">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="resign:" target="494" id="551"/>
+                            <action selector="watchAppEntitlementBrowse:" target="494" id="NC4-4X-sh9"/>
+                            <outlet property="nextKeyView" destination="U9h-nm-Iiz" id="CKe-Ph-xSz"/>
                         </connections>
                     </button>
-                    <textField hidden="YES" verticalHuggingPriority="750" id="555">
-                        <rect key="frame" x="42" y="14" width="188" height="17"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" placeholderString="Please wait" id="556">
+                    <textField verticalHuggingPriority="750" id="U9h-nm-Iiz" customClass="IRTextFieldDrag">
+                        <rect key="frame" x="20" y="114" width="230" height="22"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="/path/to/watch_extension_entitlements.plist" drawsBackground="YES" id="Vkg-Mc-hNe">
                             <font key="font" metaFont="system"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="2Nx-BV-1B0" id="tTn-H1-ENB"/>
+                        </connections>
                     </textField>
+                    <button verticalHuggingPriority="750" id="2Nx-BV-1B0">
+                        <rect key="frame" x="252" y="107" width="98" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="push" title="Browse" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="h6L-Qh-aEZ">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="watchExtensionEntitlementBrowse:" target="494" id="ZPm-B5-6PK"/>
+                            <outlet property="nextKeyView" destination="572" id="asJ-fZ-q8o"/>
+                        </connections>
+                    </button>
+                    <textField verticalHuggingPriority="750" id="572" customClass="IRTextFieldDrag">
+                        <rect key="frame" x="20" y="84" width="230" height="22"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" enabled="NO" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="com.companyname.appname" drawsBackground="YES" id="573">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <outlet property="nextKeyView" destination="574" id="587"/>
+                        </connections>
+                    </textField>
+                    <button id="574">
+                        <rect key="frame" x="255" y="85" width="90" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="check" title="Change ID" bezelStyle="regularSquare" imagePosition="left" inset="2" id="575">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="changeBundleIDPressed:" target="494" id="578"/>
+                            <outlet property="nextKeyView" destination="590" id="611"/>
+                        </connections>
+                    </button>
                     <comboBox verticalHuggingPriority="750" id="590">
-                        <rect key="frame" x="20" y="43" width="303" height="26"/>
+                        <rect key="frame" x="20" y="51" width="330" height="26"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         <comboBoxCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" placeholderString="Select a signing certificate" drawsBackground="YES" completes="NO" usesDataSource="YES" numberOfVisibleItems="5" id="591">
                             <font key="font" metaFont="system"/>
@@ -189,32 +289,28 @@
                             <outlet property="nextKeyView" destination="539" id="612"/>
                         </connections>
                     </comboBox>
-                    <progressIndicator horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="557">
-                        <rect key="frame" x="20" y="14" width="16" height="16"/>
+                    <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="557">
+                        <rect key="frame" x="20" y="22" width="16" height="16"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     </progressIndicator>
-                    <textField verticalHuggingPriority="750" id="572" customClass="IRTextFieldDrag">
-                        <rect key="frame" x="20" y="75" width="208" height="22"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" enabled="NO" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="com.companyname.appname" drawsBackground="YES" id="573">
+                    <textField hidden="YES" verticalHuggingPriority="750" id="555">
+                        <rect key="frame" x="42" y="22" width="210" height="17"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" placeholderString="Please wait" id="556">
                             <font key="font" metaFont="system"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
-                        <connections>
-                            <outlet property="nextKeyView" destination="574" id="587"/>
-                        </connections>
                     </textField>
-                    <button id="574">
-                        <rect key="frame" x="234" y="77" width="88" height="18"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="check" title="Change ID" bezelStyle="regularSquare" imagePosition="left" inset="2" id="575">
-                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                    <button verticalHuggingPriority="750" id="539">
+                        <rect key="frame" x="252" y="13" width="98" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="push" title="ReSign!" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="540">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="changeBundleIDPressed:" target="494" id="578"/>
-                            <outlet property="nextKeyView" destination="590" id="611"/>
+                            <action selector="resign:" target="494" id="551"/>
                         </connections>
                     </button>
                 </subviews>
@@ -222,6 +318,7 @@
             <connections>
                 <outlet property="initialFirstResponder" destination="535" id="581"/>
             </connections>
+            <point key="canvasLocation" x="338" y="351.5"/>
         </window>
         <customObject id="494" customClass="iReSignAppDelegate">
             <connections>
@@ -229,7 +326,7 @@
                 <outlet property="bundleIDField" destination="572" id="576"/>
                 <outlet property="certComboBox" destination="590" id="592"/>
                 <outlet property="changeBundleIDCheckbox" destination="574" id="577"/>
-                <outlet property="entitlementBrowseButton" destination="595" id="607"/>
+                <outlet property="entitlementBrowseButton" destination="595" id="DHj-H9-BFJ"/>
                 <outlet property="entitlementField" destination="543" id="608"/>
                 <outlet property="flurry" destination="557" id="562"/>
                 <outlet property="pathField" destination="533" id="548"/>
@@ -237,6 +334,14 @@
                 <outlet property="provisioningPathField" destination="563" id="569"/>
                 <outlet property="resignButton" destination="539" id="549"/>
                 <outlet property="statusLabel" destination="555" id="561"/>
+                <outlet property="watchAppEntitlementField" destination="iPi-p3-zjZ" id="afc-nx-esX"/>
+                <outlet property="watchAppProvisioningBrowseButton" destination="xbK-rX-hzw" id="7kQ-gM-aKe"/>
+                <outlet property="watchAppProvisioningPathField" destination="hge-cp-kCJ" id="vnY-mn-YEU"/>
+                <outlet property="watchEntitlementBrowseButton" destination="cMX-79-tv4" id="gEZ-qh-wsI"/>
+                <outlet property="watchExtensionEntitlementBrowseButton" destination="2Nx-BV-1B0" id="Y5x-gs-bIa"/>
+                <outlet property="watchExtensionEntitlementField" destination="U9h-nm-Iiz" id="hHc-S7-CGP"/>
+                <outlet property="watchExtensionProvisioningBrowseButton" destination="IXT-ue-B1t" id="SVX-TH-idx"/>
+                <outlet property="watchExtensionProvisioningPathField" destination="05r-jE-971" id="FKC-dN-YDT"/>
                 <outlet property="window" destination="371" id="532"/>
             </connections>
         </customObject>
@@ -257,7 +362,7 @@
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="Icon" id="LSY-JN-rDx"/>
                     </imageView>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="Ft3-WI-tTm">
-                        <rect key="frame" x="101.00000067379159" y="239.0000017943762" width="303" height="20"/>
+                        <rect key="frame" x="101.00000067379159" y="239" width="303" height="20"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="How to use iReSign" id="QDO-Yr-Chc">
                             <font key="font" metaFont="systemBold" size="14"/>

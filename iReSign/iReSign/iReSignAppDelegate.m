@@ -8,10 +8,15 @@
 //
 
 #import "iReSignAppDelegate.h"
+#import "iReSignAndVerify.h"
 
 static NSString *kKeyPrefsBundleIDChange            = @"keyBundleIDChange";
 
 static NSString *kKeyBundleIDPlistApp               = @"CFBundleIdentifier";
+
+static NSString *kKeyWKCompanionAppBundleId         = @"WKCompanionAppBundleIdentifier";
+static NSString *kKeyWKAppBundleId                  = @"NSExtension:NSExtensionAttributes:WKAppBundleIdentifier";
+
 static NSString *kKeyBundleIDPlistiTunesArtwork     = @"softwareVersionBundleId";
 static NSString *kKeyInfoPlistApplicationProperties = @"ApplicationProperties";
 static NSString *kKeyInfoPlistApplicationPath       = @"ApplicationPath";
@@ -21,6 +26,13 @@ static NSString *kProductsDirName                   = @"Products";
 static NSString *kInfoPlistFilename                 = @"Info.plist";
 static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
 
+@interface iReSignAppDelegate(){
+    iReSignAndVerify *signWatchExtensionObject;
+    iReSignAndVerify *signWatchKitAppObject;
+    iReSignAndVerify *signAppObject;
+}
+
+@end
 @implementation iReSignAppDelegate
 
 @synthesize window,workingPath;
@@ -36,8 +48,18 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
     
     if ([defaults valueForKey:@"ENTITLEMENT_PATH"])
         [entitlementField setStringValue:[defaults valueForKey:@"ENTITLEMENT_PATH"]];
+    if ([defaults valueForKey:@"WATCH_ENTITLEMENT_PATH"])
+        [watchAppEntitlementField setStringValue:[defaults valueForKey:@"WATCH_ENTITLEMENT_PATH"]];
+    if ([defaults valueForKey:@"WATCH_EXTENSION_ENTITLEMENT_PATH"])
+        [watchExtensionEntitlementField setStringValue:[defaults valueForKey:@"WATCH_EXTENSION_ENTITLEMENT_PATH"]];
+    
     if ([defaults valueForKey:@"MOBILEPROVISION_PATH"])
         [provisioningPathField setStringValue:[defaults valueForKey:@"MOBILEPROVISION_PATH"]];
+    
+    if ([defaults valueForKey:@"WATCHKITAPP_MOBILEPROVISION_PATH"])
+        [watchAppProvisioningPathField setStringValue:[defaults valueForKey:@"WATCHKITAPP_MOBILEPROVISION_PATH"]];
+    if ([defaults valueForKey:@"WATCHKITEXTENSION_MOBILEPROVISION_PATH"])
+        [watchExtensionProvisioningPathField setStringValue:[defaults valueForKey:@"WATCHKITEXTENSION_MOBILEPROVISION_PATH"]];
     
     if (![[NSFileManager defaultManager] fileExistsAtPath:@"/usr/bin/zip"]) {
         [self showAlertOfKind:NSCriticalAlertStyle WithTitle:@"Error" AndMessage:@"This app cannot run without the zip utility present at /usr/bin/zip"];
@@ -58,12 +80,20 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
     //Save cert name
     [defaults setValue:[NSNumber numberWithInteger:[certComboBox indexOfSelectedItem]] forKey:@"CERT_INDEX"];
     [defaults setValue:[entitlementField stringValue] forKey:@"ENTITLEMENT_PATH"];
+    [defaults setValue:[watchAppEntitlementField stringValue] forKey:@"WATCH_ENTITLEMENT_PATH"];
+    [defaults setValue:[watchExtensionEntitlementField stringValue] forKey:@"WATCH_EXTENSION_ENTITLEMENT_PATH"];
+    
     [defaults setValue:[provisioningPathField stringValue] forKey:@"MOBILEPROVISION_PATH"];
+    
+    if([watchAppProvisioningPathField stringValue].length > 0){
+        [defaults setValue:[watchAppProvisioningPathField stringValue] forKey:@"WATCHKITAPP_MOBILEPROVISION_PATH"];
+    }
+    if([watchExtensionProvisioningPathField stringValue].length > 0){
+        [defaults setValue:[watchExtensionProvisioningPathField stringValue] forKey:@"WATCHKITEXTENSION_MOBILEPROVISION_PATH"];
+    }
+    
     [defaults setValue:[bundleIDField stringValue] forKey:kKeyPrefsBundleIDChange];
     [defaults synchronize];
-    
-    codesigningResult = nil;
-    verificationResult = nil;
     
     sourcePath = [pathField stringValue];
     workingPath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"com.appulize.iresign"];
@@ -230,19 +260,35 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
 }
 
 - (BOOL)doAppBundleIDChange:(NSString *)newBundleID {
-    NSArray *dirContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[workingPath stringByAppendingPathComponent:kPayloadDirName] error:nil];
-    NSString *infoPlistPath = nil;
     
-    for (NSString *file in dirContents) {
-        if ([[[file pathExtension] lowercaseString] isEqualToString:@"app"]) {
-            infoPlistPath = [[[workingPath stringByAppendingPathComponent:kPayloadDirName]
-                              stringByAppendingPathComponent:file]
-                             stringByAppendingPathComponent:kInfoPlistFilename];
-            break;
+    NSString *infoPlistPath = [[self appFilePath] stringByAppendingPathComponent:kInfoPlistFilename];
+    
+    BOOL changeAppBundleId = [self changeBundleIDForFile:infoPlistPath bundleIDKey:kKeyBundleIDPlistApp newBundleID:newBundleID plistOutOptions:NSPropertyListBinaryFormat_v1_0];
+    if(!changeAppBundleId)
+        return NO;
+    
+    if([self watchAppFilePath]){
+        // change bundle id for watch app
+        NSString *watchAppInfoPlistPath = [[self watchAppFilePath] stringByAppendingPathComponent:kInfoPlistFilename];
+        NSString *watchAppBundleId = [newBundleID stringByAppendingString:@".watchkitapp"];
+        
+        BOOL changeAppBundleId = [self changeBundleIDForFile:watchAppInfoPlistPath bundleIDKey:kKeyBundleIDPlistApp newBundleID:watchAppBundleId plistOutOptions:NSPropertyListBinaryFormat_v1_0];
+        if(changeAppBundleId){
+            changeAppBundleId = [self changeBundleIDForFile:watchAppInfoPlistPath bundleIDKey:kKeyWKCompanionAppBundleId newBundleID:newBundleID plistOutOptions:NSPropertyListBinaryFormat_v1_0];
         }
+        
+        if(changeAppBundleId && [self watchExtensionFilePath]){
+            NSString *watchExtensionInfoPlistPath = [[self watchExtensionFilePath] stringByAppendingPathComponent:kInfoPlistFilename];
+            NSString *watchExtensionBundleId = [watchAppBundleId stringByAppendingString:@".watchkitextension"];
+            
+            changeAppBundleId = [self changeBundleIDForFile:watchExtensionInfoPlistPath bundleIDKey:kKeyBundleIDPlistApp newBundleID:watchExtensionBundleId plistOutOptions:NSPropertyListBinaryFormat_v1_0];
+            if(changeAppBundleId){
+                changeAppBundleId = [self changeBundleIDForFile:watchExtensionInfoPlistPath bundleIDKey:kKeyWKAppBundleId newBundleID:watchAppBundleId plistOutOptions:NSPropertyListBinaryFormat_v1_0];
+            }
+        }
+        return changeAppBundleId;
     }
-    
-    return [self changeBundleIDForFile:infoPlistPath bundleIDKey:kKeyBundleIDPlistApp newBundleID:newBundleID plistOutOptions:NSPropertyListBinaryFormat_v1_0];
+    return YES;
 }
 
 - (BOOL)changeBundleIDForFile:(NSString *)filePath bundleIDKey:(NSString *)bundleIDKey newBundleID:(NSString *)newBundleID plistOutOptions:(NSPropertyListWriteOptions)options {
@@ -251,169 +297,281 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
     
     if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
         plist = [[NSMutableDictionary alloc] initWithContentsOfFile:filePath];
-        [plist setObject:newBundleID forKey:bundleIDKey];
+        if([bundleIDKey rangeOfString:@":"].location != NSNotFound){
+            NSArray *keys = [bundleIDKey componentsSeparatedByString:@":"];
+            NSMutableDictionary *dic = plist;
+            NSString *lastkey = @"";
+            for(NSString *key in keys){
+                if(dic[key]){
+                    if([dic[key] isKindOfClass:[NSDictionary class]]){
+                        dic = dic[key];
+                    }
+                    else{
+                        lastkey = key;
+                        break;
+                    }
+                }
+            }
+            dic[lastkey] = newBundleID;
+        }
+        else{
+            plist[bundleIDKey] = newBundleID;
+        }
         
         NSData *xmlData = [NSPropertyListSerialization dataWithPropertyList:plist format:options options:kCFPropertyListImmutable error:nil];
         
         return [xmlData writeToFile:filePath atomically:YES];
-        
     }
     
     return NO;
 }
 
-
-- (void)doProvisioning {
+- (NSString *)appFilePath{
     NSArray *dirContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[workingPath stringByAppendingPathComponent:kPayloadDirName] error:nil];
-    
+    NSString *appFilePath = nil;
     for (NSString *file in dirContents) {
         if ([[[file pathExtension] lowercaseString] isEqualToString:@"app"]) {
-            appPath = [[workingPath stringByAppendingPathComponent:kPayloadDirName] stringByAppendingPathComponent:file];
-            if ([[NSFileManager defaultManager] fileExistsAtPath:[appPath stringByAppendingPathComponent:@"embedded.mobileprovision"]]) {
-                NSLog(@"Found embedded.mobileprovision, deleting.");
-                [[NSFileManager defaultManager] removeItemAtPath:[appPath stringByAppendingPathComponent:@"embedded.mobileprovision"] error:nil];
-            }
-            break;
+            appFilePath = [[workingPath stringByAppendingPathComponent:kPayloadDirName] stringByAppendingPathComponent:file];
         }
+        break;
     }
+    return appFilePath;
+}
+
+- (NSString *)watchAppFilePath{
+    NSString *appFilePath = [[self appFilePath] stringByAppendingPathComponent:@"Watch"];
+    if(![[NSFileManager defaultManager] fileExistsAtPath:appFilePath]){
+        return nil;
+    }
+    NSArray *dirContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:appFilePath error:nil];
+    NSString *watchAppFilePath = nil;
+    for (NSString *file in dirContents) {
+        if ([[[file pathExtension] lowercaseString] isEqualToString:@"app"]) {
+            watchAppFilePath = [appFilePath stringByAppendingPathComponent:file];
+        }
+        break;
+    }
+    return watchAppFilePath;
+}
+
+- (NSString *)watchExtensionFilePath{
+    NSString *appFilePath = [[self watchAppFilePath] stringByAppendingPathComponent:@"PlugIns"];
+    if(![[NSFileManager defaultManager] fileExistsAtPath:appFilePath]){
+        return nil;
+    }
+    NSArray *dirContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:appFilePath error:nil];
+    NSString *watchExtensionFilePath = nil;
+    for (NSString *file in dirContents) {
+        if ([[[file pathExtension] lowercaseString] isEqualToString:@"appex"]) {
+            watchExtensionFilePath = [appFilePath stringByAppendingPathComponent:file];
+        }
+        break;
+    }
+    return watchExtensionFilePath;
+}
+
+- (void) doAppProvisioningAtPath:(NSString *)appFilePath withProvision:(NSString *)provisionFile{
     
-    NSString *targetPath = [appPath stringByAppendingPathComponent:@"embedded.mobileprovision"];
+    if(!appFilePath)
+        return;
     
+    NSString *targetPath = [appFilePath stringByAppendingPathComponent:@"embedded.mobileprovision"];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:targetPath]) {
+        NSLog(@"Found embedded.mobileprovision, deleting.");
+        [[NSFileManager defaultManager] removeItemAtPath:targetPath error:nil];
+    }
     provisioningTask = [[NSTask alloc] init];
     [provisioningTask setLaunchPath:@"/bin/cp"];
-    [provisioningTask setArguments:[NSArray arrayWithObjects:[provisioningPathField stringValue], targetPath, nil]];
+    [provisioningTask setArguments:[NSArray arrayWithObjects:provisionFile, targetPath, nil]];
     
     [provisioningTask launch];
+}
+
+- (void)doProvisioning {
+    
+    NSString *appFilePath = [self appFilePath];
+    if(!appFilePath)
+        return;
+    
+    [self doAppProvisioningAtPath:appFilePath withProvision:[provisioningPathField stringValue]];
+    
+    if([self watchAppFilePath]){
+        [self doAppProvisioningAtPath:[self watchAppFilePath] withProvision:[watchAppProvisioningPathField stringValue]];
+        if([self watchExtensionFilePath]){
+            [self doAppProvisioningAtPath:[self watchExtensionFilePath] withProvision:[watchExtensionProvisioningPathField stringValue]];
+        }
+    }
     
     [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(checkProvisioning:) userInfo:nil repeats:TRUE];
 }
 
+- (void) checkFailed{
+    
+    [self showAlertOfKind:NSCriticalAlertStyle WithTitle:@"Error" AndMessage:@"Product identifiers don't match"];
+    [self enableControls];
+    [statusLabel setStringValue:@"Ready"];
+    
+}
 - (void)checkProvisioning:(NSTimer *)timer {
     if ([provisioningTask isRunning] == 0) {
         [timer invalidate];
         provisioningTask = nil;
         
-        NSArray *dirContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[workingPath stringByAppendingPathComponent:kPayloadDirName] error:nil];
+        BOOL identifierOK = NO;
+        NSString *watchExtensionPath = [self watchExtensionFilePath];
+        if(watchExtensionPath){
+            
+            if(![self checkAppProvisionAtPath:watchExtensionPath]){
+                [self checkFailed];
+                return;
+            }
+        }
+        NSString *watchAppPath = [self watchAppFilePath];
+        if(watchAppPath){
+            if(![self checkAppProvisionAtPath:watchAppPath]){
+                [self checkFailed];
+                return;
+            }
+        }
         
-        for (NSString *file in dirContents) {
-            if ([[[file pathExtension] lowercaseString] isEqualToString:@"app"]) {
-                appPath = [[workingPath stringByAppendingPathComponent:kPayloadDirName] stringByAppendingPathComponent:file];
-                if ([[NSFileManager defaultManager] fileExistsAtPath:[appPath stringByAppendingPathComponent:@"embedded.mobileprovision"]]) {
-                    
-                    BOOL identifierOK = FALSE;
-                    NSString *identifierInProvisioning = @"";
-                    
-                    NSString *embeddedProvisioning = [NSString stringWithContentsOfFile:[appPath stringByAppendingPathComponent:@"embedded.mobileprovision"] encoding:NSASCIIStringEncoding error:nil];
-                    NSArray* embeddedProvisioningLines = [embeddedProvisioning componentsSeparatedByCharactersInSet:
-                                                          [NSCharacterSet newlineCharacterSet]];
-                    
-                    for (int i = 0; i < [embeddedProvisioningLines count]; i++) {
-                        if ([[embeddedProvisioningLines objectAtIndex:i] rangeOfString:@"application-identifier"].location != NSNotFound) {
-                            
-                            NSInteger fromPosition = [[embeddedProvisioningLines objectAtIndex:i+1] rangeOfString:@"<string>"].location + 8;
-                            
-                            NSInteger toPosition = [[embeddedProvisioningLines objectAtIndex:i+1] rangeOfString:@"</string>"].location;
-                            
-                            NSRange range;
-                            range.location = fromPosition;
-                            range.length = toPosition-fromPosition;
-                            
-                            NSString *fullIdentifier = [[embeddedProvisioningLines objectAtIndex:i+1] substringWithRange:range];
-                            
-                            NSArray *identifierComponents = [fullIdentifier componentsSeparatedByString:@"."];
-                            
-                            if ([[identifierComponents lastObject] isEqualTo:@"*"]) {
-                                identifierOK = TRUE;
-                            }
-                            
-                            for (int i = 1; i < [identifierComponents count]; i++) {
-                                identifierInProvisioning = [identifierInProvisioning stringByAppendingString:[identifierComponents objectAtIndex:i]];
-                                if (i < [identifierComponents count]-1) {
-                                    identifierInProvisioning = [identifierInProvisioning stringByAppendingString:@"."];
-                                }
-                            }
-                            break;
-                        }
+        identifierOK = [self checkAppProvisionAtPath:[self appFilePath]];
+        
+        if (identifierOK) {
+            NSLog(@"Provisioning completed.");
+            [statusLabel setStringValue:@"Provisioning completed"];
+            [self doEntitlementsFixing];
+        } else {
+            [self checkFailed];
+        }
+    }
+}
+
+- (BOOL) checkAppProvisionAtPath:(NSString *)strPath{
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:[strPath stringByAppendingPathComponent:@"embedded.mobileprovision"]]) {
+        
+        BOOL identifierOK = FALSE;
+        NSString *identifierInProvisioning = @"";
+        
+        NSString *embeddedProvisioning = [NSString stringWithContentsOfFile:[strPath stringByAppendingPathComponent:@"embedded.mobileprovision"] encoding:NSASCIIStringEncoding error:nil];
+        NSArray* embeddedProvisioningLines = [embeddedProvisioning componentsSeparatedByCharactersInSet:
+                                              [NSCharacterSet newlineCharacterSet]];
+        
+        for (int i = 0; i < [embeddedProvisioningLines count]; i++) {
+            if ([[embeddedProvisioningLines objectAtIndex:i] rangeOfString:@"application-identifier"].location != NSNotFound) {
+                
+                NSInteger fromPosition = [[embeddedProvisioningLines objectAtIndex:i+1] rangeOfString:@"<string>"].location + 8;
+                
+                NSInteger toPosition = [[embeddedProvisioningLines objectAtIndex:i+1] rangeOfString:@"</string>"].location;
+                
+                NSRange range;
+                range.location = fromPosition;
+                range.length = toPosition-fromPosition;
+                
+                NSString *fullIdentifier = [[embeddedProvisioningLines objectAtIndex:i+1] substringWithRange:range];
+                
+                NSArray *identifierComponents = [fullIdentifier componentsSeparatedByString:@"."];
+                
+                if ([[identifierComponents lastObject] isEqualTo:@"*"]) {
+                    identifierOK = TRUE;
+                }
+                
+                for (int i = 1; i < [identifierComponents count]; i++) {
+                    identifierInProvisioning = [identifierInProvisioning stringByAppendingString:[identifierComponents objectAtIndex:i]];
+                    if (i < [identifierComponents count]-1) {
+                        identifierInProvisioning = [identifierInProvisioning stringByAppendingString:@"."];
                     }
-                    
-                    NSLog(@"Mobileprovision identifier: %@",identifierInProvisioning);
-                    
-                    NSDictionary *infoplist = [NSDictionary dictionaryWithContentsOfFile:[appPath stringByAppendingPathComponent:@"Info.plist"]];
-                    if ([identifierInProvisioning isEqualTo:[infoplist objectForKey:kKeyBundleIDPlistApp]]) {
-                        NSLog(@"Identifiers match");
-                        identifierOK = TRUE;
-                    }
-                    
-                    if (identifierOK) {
-                        NSLog(@"Provisioning completed.");
-                        [statusLabel setStringValue:@"Provisioning completed"];
-                        [self doEntitlementsFixing];
-                    } else {
-                        [self showAlertOfKind:NSCriticalAlertStyle WithTitle:@"Error" AndMessage:@"Product identifiers don't match"];
-                        [self enableControls];
-                        [statusLabel setStringValue:@"Ready"];
-                    }
-                } else {
-                    [self showAlertOfKind:NSCriticalAlertStyle WithTitle:@"Error" AndMessage:@"Provisioning failed"];
-                    [self enableControls];
-                    [statusLabel setStringValue:@"Ready"];
                 }
                 break;
             }
         }
+        
+        NSLog(@"Mobileprovision identifier: %@",identifierInProvisioning);
+        
+        NSDictionary *infoplist = [NSDictionary dictionaryWithContentsOfFile:[strPath stringByAppendingPathComponent:@"Info.plist"]];
+        if ([identifierInProvisioning isEqualTo:[infoplist objectForKey:kKeyBundleIDPlistApp]]) {
+            NSLog(@"Identifiers match");
+            identifierOK = TRUE;
+        }
+        
+        return identifierOK;
+    } else {
+        [self showAlertOfKind:NSCriticalAlertStyle WithTitle:@"Error" AndMessage:@"Provisioning failed"];
+        [self enableControls];
+        [statusLabel setStringValue:@"Ready"];
     }
+    return NO;
+}
+
+- (BOOL) hasWatchApp{
+    return [self watchAppFilePath] && [self watchExtensionFilePath];
 }
 
 - (void)doEntitlementsFixing
 {
     if (![entitlementField.stringValue isEqualToString:@""] || [provisioningPathField.stringValue isEqualToString:@""]) {
-        [self doCodeSigning];
-        return; // Using a pre-made entitlements file or we're not re-provisioning.
+        if(![self hasWatchApp] || ([self hasWatchApp] && ![watchExtensionEntitlementField.stringValue isEqualToString:@""] && ![watchAppEntitlementField.stringValue isEqualToString:@""])){
+            
+            [self doCodeSigning];
+            return; // Using a pre-made entitlements file or we're not re-provisioning.
+        }
     }
     
     [statusLabel setStringValue:@"Generating entitlements"];
 
-    if (appPath) {
-        generateEntitlementsTask = [[NSTask alloc] init];
-        [generateEntitlementsTask setLaunchPath:@"/usr/bin/security"];
-        [generateEntitlementsTask setArguments:@[@"cms", @"-D", @"-i", provisioningPathField.stringValue]];
-        [generateEntitlementsTask setCurrentDirectoryPath:workingPath];
-
-        [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(checkEntitlementsFix:) userInfo:nil repeats:TRUE];
-
-        NSPipe *pipe=[NSPipe pipe];
-        [generateEntitlementsTask setStandardOutput:pipe];
-        [generateEntitlementsTask setStandardError:pipe];
-        NSFileHandle *handle = [pipe fileHandleForReading];
-
-        [generateEntitlementsTask launch];
-
-        [NSThread detachNewThreadSelector:@selector(watchEntitlements:)
-                                 toTarget:self withObject:handle];
-    }
+    
+    [self generateEntitlementFiles];
 }
 
-- (void)watchEntitlements:(NSFileHandle*)streamHandle {
-    @autoreleasepool {
-        entitlementsResult = [[NSString alloc] initWithData:[streamHandle readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+- (void) generateEntitlementFiles{
+    
+    if([self hasWatchApp]){
+        NSString *watchExtensionPath = [self watchExtensionFilePath];
+        if(watchExtensionPath && [[watchExtensionEntitlementField stringValue] isEqualToString:@""]){
+            // Generate watch extension entitlement file;
+            [self generateEntitlementFileFrom:watchExtensionProvisioningPathField.stringValue withName:@"watchExtensionEntitlement.plist"  pathWriteTo:watchExtensionEntitlementField];
+        }
+        NSString *watchAppPath = [self watchAppFilePath];
+        if(watchAppPath && [[watchAppEntitlementField stringValue] isEqualToString:@""]){
+            [self generateEntitlementFileFrom:watchAppProvisioningPathField.stringValue withName:@"watchAppEntitlement.plist" pathWriteTo:watchAppEntitlementField];
+        }
     }
+    
+    if ([self appFilePath] && [[entitlementField stringValue] isEqualToString:@""]) {
+        [self generateEntitlementFileFrom:provisioningPathField.stringValue withName:@"entitlement.plist" pathWriteTo:entitlementField];
+    }
+    
+    [self doCodeSigning];
 }
 
-- (void)checkEntitlementsFix:(NSTimer *)timer {
-    if ([generateEntitlementsTask isRunning] == 0) {
-        [timer invalidate];
+- (void) generateEntitlementFileFrom:(NSString *)provisionPath withName:(NSString *)entitlementFile pathWriteTo:(IRTextFieldDrag *)textField{
+    // Generate entitlement file, and write it's path to textField
+    
+    if([generateEntitlementsTask isRunning] == 0){
         generateEntitlementsTask = nil;
-        NSLog(@"Entitlements fixed done");
-        [statusLabel setStringValue:@"Entitlements generated"];
-        [self doEntitlementsEdit];
     }
+    
+    generateEntitlementsTask = [[NSTask alloc] init];
+    [generateEntitlementsTask setLaunchPath:@"/usr/bin/security"];
+    [generateEntitlementsTask setArguments:@[@"cms", @"-D", @"-i", provisionPath]];
+    [generateEntitlementsTask setCurrentDirectoryPath:workingPath];
+    
+    NSPipe *pipe=[NSPipe pipe];
+    [generateEntitlementsTask setStandardOutput:pipe];
+    [generateEntitlementsTask setStandardError:pipe];
+    NSFileHandle *handle = [pipe fileHandleForReading];
+    
+    [generateEntitlementsTask launch];
+    
+    NSString *entitlementsResult = [[NSString alloc] initWithData:[handle readDataToEndOfFile] encoding:NSASCIIStringEncoding];
+    [self doEntitlementsEdit:entitlementsResult toFile:entitlementFile writeTo:textField];
 }
 
-- (void)doEntitlementsEdit
+- (void)doEntitlementsEdit:(NSString *)entitlementsResult toFile:(NSString *)entitlementFile  writeTo:(IRTextFieldDrag *)textField
 {
     NSDictionary* entitlements = entitlementsResult.propertyList;
     entitlements = entitlements[@"Entitlements"];
-    NSString* filePath = [workingPath stringByAppendingPathComponent:@"entitlements.plist"];
+    NSString* filePath = [workingPath stringByAppendingPathComponent:entitlementFile];
     NSData *xmlData = [NSPropertyListSerialization dataWithPropertyList:entitlements format:NSPropertyListXMLFormat_v1_0 options:kCFPropertyListImmutable error:nil];
     if(![xmlData writeToFile:filePath atomically:YES]) {
         NSLog(@"Error writing entitlements file.");
@@ -422,187 +580,140 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
         [statusLabel setStringValue:@"Ready"];
     }
     else {
-        entitlementField.stringValue = filePath;
-        [self doCodeSigning];
+        textField.stringValue = filePath;
+        
     }
 }
 
-- (void)doCodeSigning {
-    appPath = nil;
-    frameworksDirPath = nil;
-    hasFrameworks = NO;
-    frameworks = [[NSMutableArray alloc] init];
+- (void) signApp{
     
-    NSArray *dirContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[workingPath stringByAppendingPathComponent:kPayloadDirName] error:nil];
-    
-    for (NSString *file in dirContents) {
-        if ([[[file pathExtension] lowercaseString] isEqualToString:@"app"]) {
-            appPath = [[workingPath stringByAppendingPathComponent:kPayloadDirName] stringByAppendingPathComponent:file];
-            frameworksDirPath = [appPath stringByAppendingPathComponent:kFrameworksDirName];
-            NSLog(@"Found %@",appPath);
-            appName = file;
-            if ([[NSFileManager defaultManager] fileExistsAtPath:frameworksDirPath]) {
-                NSLog(@"Found %@",frameworksDirPath);
-                hasFrameworks = YES;
-                NSArray *frameworksContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:frameworksDirPath error:nil];
-                for (NSString *frameworkFile in frameworksContents) {
-                    NSString *extension = [[frameworkFile pathExtension] lowercaseString];
-                    if ([extension isEqualTo:@"framework"] || [extension isEqualTo:@"dylib"]) {
-                        frameworkPath = [frameworksDirPath stringByAppendingPathComponent:frameworkFile];
-                        NSLog(@"Found %@",frameworkPath);
-                        [frameworks addObject:frameworkPath];
-                    }
-                }
+    if(!signAppObject){
+        signAppObject = [[iReSignAndVerify alloc] initWithPath:[self appFilePath] entitlement:entitlementField.stringValue andCert:[certComboBox objectValue]];
+        iReSignAppDelegate* bself = self;
+        signAppObject.signBlock = ^(BOOL finish, NSString *codeSignResult){
+            NSLog(@"signAppResult:  %@", codeSignResult);
+            if(finish){
+                [bself verifySignature];
             }
-            [statusLabel setStringValue:[NSString stringWithFormat:@"Codesigning %@",file]];
-            break;
-        }
+        };
     }
+    [signAppObject doCodeSigning];
+}
+
+- (void) signWatchKitApp{
     
-    if (appPath) {
-        if (hasFrameworks) {
-            [self signFile:[frameworks lastObject]];
-            [frameworks removeLastObject];
-        } else {
-            [self signFile:appPath];
+    NSString *watchAppFile = [self watchAppFilePath];
+    if(watchAppFile){
+        
+        if(!signWatchKitAppObject){
+            signWatchKitAppObject = [[iReSignAndVerify alloc] initWithPath:watchAppFile entitlement:watchAppEntitlementField.stringValue andCert:[certComboBox objectValue]];
+            iReSignAppDelegate* bself = self;
+            signWatchKitAppObject.signBlock = ^(BOOL finish, NSString *codeSignResult){
+                NSLog(@"signWatchKitAppResult:  %@", codeSignResult);
+                if(finish){
+                    [bself signApp];
+                }
+            };
         }
+        [signWatchKitAppObject doCodeSigning];
     }
 }
 
-- (void)signFile:(NSString*)filePath {
-    NSLog(@"Codesigning %@", filePath);
-    [statusLabel setStringValue:[NSString stringWithFormat:@"Codesigning %@",filePath]];
+- (void) signWatchKitExtension{
     
-    NSMutableArray *arguments = [NSMutableArray arrayWithObjects:@"-fs", [certComboBox objectValue], nil];
-    NSDictionary *systemVersionDictionary = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
-    NSString * systemVersion = [systemVersionDictionary objectForKey:@"ProductVersion"];
-    NSArray * version = [systemVersion componentsSeparatedByString:@"."];
-    if ([version[0] intValue]<10 || ([version[0] intValue]==10 && ([version[1] intValue]<9 || ([version[1] intValue]==9 && [version[2] intValue]<5)))) {
-        
-        /*
-         Before OSX 10.9, code signing requires a version 1 signature.
-         The resource envelope is necessary.
-         To ensure it is added, append the resource flag to the arguments.
-         */
-        
-        NSString *resourceRulesPath = [[NSBundle mainBundle] pathForResource:@"ResourceRules" ofType:@"plist"];
-        NSString *resourceRulesArgument = [NSString stringWithFormat:@"--resource-rules=%@",resourceRulesPath];
-        [arguments addObject:resourceRulesArgument];
+    NSString *extensionFile = [self watchExtensionFilePath];
+    
+    if(extensionFile)  {
+        if(!signWatchExtensionObject){
+            signWatchExtensionObject = [[iReSignAndVerify alloc] initWithPath:extensionFile entitlement:watchExtensionEntitlementField.stringValue andCert:[certComboBox objectValue]];
+            iReSignAppDelegate* bself = self;
+            signWatchExtensionObject.signBlock = ^(BOOL finish,  NSString *codeSignResult){
+                NSLog(@"signWatchKitExtensionResult:  %@", codeSignResult);
+                if(finish){
+                    [bself signWatchKitApp];
+                }
+            };
+        }
+        [signWatchExtensionObject doCodeSigning];
+    }
+}
+
+- (void) doCodeSigning{
+    
+    appName = [[self appFilePath] lastPathComponent];
+    [statusLabel setStringValue:[NSString stringWithFormat:@"Codesigning %@",appName]];
+    
+    if([self hasWatchApp]){
+        [self signWatchKitExtension];
+    }
+    
+    [self signApp];
+}
+
+- (void) verifyWatchKitExtension{
+    if(signWatchExtensionObject){
+        iReSignAppDelegate* bself = self;
+        signWatchExtensionObject.verifyBlock = ^(BOOL success, NSString *verifyResult){
+            if(success){
+                [bself verifyWatchKitApp];
+            }
+        };
+        [signWatchExtensionObject doVerifySignature];
+    }
+}
+
+- (void) verifyWatchKitApp{
+    
+    if(signWatchKitAppObject){
+        iReSignAppDelegate* bself = self;
+        signWatchKitAppObject.verifyBlock = ^(BOOL success, NSString *verifyResult){
+            if(success){
+                [bself verifyApp];
+            }
+        };
+        [signWatchKitAppObject doVerifySignature];
+    }
+}
+
+- (void) verifyApp{
+    
+    if(signAppObject){
+        iReSignAppDelegate* bself = self;
+        signAppObject.verifyBlock = ^(BOOL success, NSString *verifyResult){
+            if(success){
+                [bself checkVerificationSuccess:success withMessage:verifyResult];
+            }
+        };
+        [signAppObject doVerifySignature];
+    }
+}
+
+- (void) verifySignature{
+    
+    appName = [[self appFilePath] lastPathComponent];
+    [statusLabel setStringValue:[NSString stringWithFormat:@"Verifying %@",appName]];
+    
+    
+    if([self hasWatchApp]){
+        [self verifyWatchKitExtension];
+    }
+    
+    [self verifyApp];
+}
+
+- (void)checkVerificationSuccess:(BOOL)success withMessage:(NSString *)message {
+    if (success) {
+        [statusLabel setStringValue:@"Verification completed"];
+        [self doZip];
     } else {
-        
-        /*
-         For OSX 10.9 and later, code signing requires a version 2 signature.
-         The resource envelope is obsolete.
-         To ensure it is ignored, remove the resource key from the Info.plist file.
-         */
-        
-        NSString *infoPath = [NSString stringWithFormat:@"%@/Info.plist", filePath];
-        NSMutableDictionary *infoDict = [NSMutableDictionary dictionaryWithContentsOfFile:infoPath];
-        [infoDict removeObjectForKey:@"CFBundleResourceSpecification"];
-        [infoDict writeToFile:infoPath atomically:YES];
-        [arguments addObject:@"--no-strict"]; // http://stackoverflow.com/a/26204757
-    }
-    
-    if (![[entitlementField stringValue] isEqualToString:@""]) {
-        [arguments addObject:[NSString stringWithFormat:@"--entitlements=%@", [entitlementField stringValue]]];
-    }
-    
-    [arguments addObjectsFromArray:[NSArray arrayWithObjects:filePath, nil]];
-    
-    codesignTask = [[NSTask alloc] init];
-    [codesignTask setLaunchPath:@"/usr/bin/codesign"];
-    [codesignTask setArguments:arguments];
-    
-    [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(checkCodesigning:) userInfo:nil repeats:TRUE];
-    
-    
-    NSPipe *pipe=[NSPipe pipe];
-    [codesignTask setStandardOutput:pipe];
-    [codesignTask setStandardError:pipe];
-    NSFileHandle *handle=[pipe fileHandleForReading];
-    
-    [codesignTask launch];
-    
-    [NSThread detachNewThreadSelector:@selector(watchCodesigning:)
-                             toTarget:self withObject:handle];
-}
-
-- (void)watchCodesigning:(NSFileHandle*)streamHandle {
-    @autoreleasepool {
-        
-        codesigningResult = [[NSString alloc] initWithData:[streamHandle readDataToEndOfFile] encoding:NSASCIIStringEncoding];
-        
-    }
-}
-
-- (void)checkCodesigning:(NSTimer *)timer {
-    if ([codesignTask isRunning] == 0) {
-        [timer invalidate];
-        codesignTask = nil;
-        if (frameworks.count > 0) {
-            [self signFile:[frameworks lastObject]];
-            [frameworks removeLastObject];
-        } else if (hasFrameworks) {
-            hasFrameworks = NO;
-            [self signFile:appPath];
-        } else {
-            NSLog(@"Codesigning done");
-            [statusLabel setStringValue:@"Codesigning completed"];
-            [self doVerifySignature];
-        }
-    }
-}
-
-- (void)doVerifySignature {
-    if (appPath) {
-        verifyTask = [[NSTask alloc] init];
-        [verifyTask setLaunchPath:@"/usr/bin/codesign"];
-        [verifyTask setArguments:[NSArray arrayWithObjects:@"-v", appPath, nil]];
-		
-        [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(checkVerificationProcess:) userInfo:nil repeats:TRUE];
-        
-        NSLog(@"Verifying %@",appPath);
-        [statusLabel setStringValue:[NSString stringWithFormat:@"Verifying %@",appName]];
-        
-        NSPipe *pipe=[NSPipe pipe];
-        [verifyTask setStandardOutput:pipe];
-        [verifyTask setStandardError:pipe];
-        NSFileHandle *handle=[pipe fileHandleForReading];
-        
-        [verifyTask launch];
-        
-        [NSThread detachNewThreadSelector:@selector(watchVerificationProcess:)
-                                 toTarget:self withObject:handle];
-    }
-}
-
-- (void)watchVerificationProcess:(NSFileHandle*)streamHandle {
-    @autoreleasepool {
-        
-        verificationResult = [[NSString alloc] initWithData:[streamHandle readDataToEndOfFile] encoding:NSASCIIStringEncoding];
-        
-    }
-}
-
-- (void)checkVerificationProcess:(NSTimer *)timer {
-    if ([verifyTask isRunning] == 0) {
-        [timer invalidate];
-        verifyTask = nil;
-        if ([verificationResult length] == 0) {
-            NSLog(@"Verification done");
-            [statusLabel setStringValue:@"Verification completed"];
-            [self doZip];
-        } else {
-            NSString *error = [[codesigningResult stringByAppendingString:@"\n\n"] stringByAppendingString:verificationResult];
-            [self showAlertOfKind:NSCriticalAlertStyle WithTitle:@"Signing failed" AndMessage:error];
-            [self enableControls];
-            [statusLabel setStringValue:@"Please try again"];
-        }
+        [self showAlertOfKind:NSCriticalAlertStyle WithTitle:@"Signing failed" AndMessage:message];
+        [self enableControls];
+        [statusLabel setStringValue:@"Please try again"];
     }
 }
 
 - (void)doZip {
-    if (appPath) {
+    if ([self appFilePath]) {
         NSArray *destinationPathComponents = [sourcePath pathComponents];
         NSString *destinationPath = @"";
         
@@ -643,9 +754,6 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
         [[NSFileManager defaultManager] removeItemAtPath:workingPath error:nil];
         
         [self enableControls];
-        
-        NSString *result = [[codesigningResult stringByAppendingString:@"\n\n"] stringByAppendingString:verificationResult];
-        NSLog(@"Codesigning result: %@",result);
     }
 }
 
@@ -681,6 +789,40 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
     }
 }
 
+- (IBAction)watchAppProvisioningBrowse:(id)sender{
+    
+    NSOpenPanel* openDlg = [NSOpenPanel openPanel];
+    
+    [openDlg setCanChooseFiles:TRUE];
+    [openDlg setCanChooseDirectories:FALSE];
+    [openDlg setAllowsMultipleSelection:FALSE];
+    [openDlg setAllowsOtherFileTypes:FALSE];
+    [openDlg setAllowedFileTypes:@[@"mobileprovision", @"MOBILEPROVISION"]];
+    
+    if ([openDlg runModal] == NSOKButton)
+    {
+        NSString* fileNameOpened = [[[openDlg URLs] objectAtIndex:0] path];
+        [watchAppProvisioningPathField setStringValue:fileNameOpened];
+    }
+}
+
+- (IBAction)watchExtensionProvisioningBrowse:(id)sender{
+    
+    NSOpenPanel* openDlg = [NSOpenPanel openPanel];
+    
+    [openDlg setCanChooseFiles:TRUE];
+    [openDlg setCanChooseDirectories:FALSE];
+    [openDlg setAllowsMultipleSelection:FALSE];
+    [openDlg setAllowsOtherFileTypes:FALSE];
+    [openDlg setAllowedFileTypes:@[@"mobileprovision", @"MOBILEPROVISION"]];
+    
+    if ([openDlg runModal] == NSOKButton)
+    {
+        NSString* fileNameOpened = [[[openDlg URLs] objectAtIndex:0] path];
+        [watchExtensionProvisioningPathField setStringValue:fileNameOpened];
+    }
+}
+
 - (IBAction)entitlementBrowse:(id)sender {
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
     
@@ -697,6 +839,37 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
     }
 }
 
+- (IBAction)watchAppEntitlementBrowse:(id)sender {
+    NSOpenPanel* openDlg = [NSOpenPanel openPanel];
+    
+    [openDlg setCanChooseFiles:TRUE];
+    [openDlg setCanChooseDirectories:FALSE];
+    [openDlg setAllowsMultipleSelection:FALSE];
+    [openDlg setAllowsOtherFileTypes:FALSE];
+    [openDlg setAllowedFileTypes:@[@"plist", @"PLIST"]];
+    
+    if ([openDlg runModal] == NSOKButton)
+    {
+        NSString* fileNameOpened = [[[openDlg URLs] objectAtIndex:0] path];
+        [watchAppEntitlementField setStringValue:fileNameOpened];
+    }
+}
+
+- (IBAction)watchExtensionEntitlementBrowse:(id)sender {
+    NSOpenPanel* openDlg = [NSOpenPanel openPanel];
+    
+    [openDlg setCanChooseFiles:TRUE];
+    [openDlg setCanChooseDirectories:FALSE];
+    [openDlg setAllowsMultipleSelection:FALSE];
+    [openDlg setAllowsOtherFileTypes:FALSE];
+    [openDlg setAllowedFileTypes:@[@"plist", @"PLIST"]];
+    
+    if ([openDlg runModal] == NSOKButton)
+    {
+        NSString* fileNameOpened = [[[openDlg URLs] objectAtIndex:0] path];
+        [watchExtensionEntitlementField setStringValue:fileNameOpened];
+    }
+}
 - (IBAction)changeBundleIDPressed:(id)sender {
     
     if (sender != changeBundleIDCheckbox) {
@@ -707,12 +880,24 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
 }
 
 - (void)disableControls {
-    [pathField setEnabled:FALSE];
-    [entitlementField setEnabled:FALSE];
-    [browseButton setEnabled:FALSE];
-    [resignButton setEnabled:FALSE];
+    [pathField setEnabled:NO];
+    [entitlementField setEnabled:NO];
+    [browseButton setEnabled:NO];
+    [resignButton setEnabled:NO];
     [provisioningBrowseButton setEnabled:NO];
     [provisioningPathField setEnabled:NO];
+    
+    [entitlementBrowseButton setEnabled:NO];
+    [watchAppEntitlementField setEnabled:NO];
+    [watchEntitlementBrowseButton setEnabled:NO];
+    [watchExtensionEntitlementField setEnabled:NO];
+    [watchExtensionEntitlementBrowseButton setEnabled:NO];
+    
+    [watchAppProvisioningPathField setEnabled:NO];
+    [watchAppProvisioningBrowseButton setEnabled:NO];
+    [watchExtensionProvisioningPathField setEnabled:NO];
+    [watchExtensionProvisioningBrowseButton setEnabled:NO];
+    
     [changeBundleIDCheckbox setEnabled:NO];
     [bundleIDField setEnabled:NO];
     [certComboBox setEnabled:NO];
@@ -728,6 +913,18 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
     [resignButton setEnabled:TRUE];
     [provisioningBrowseButton setEnabled:YES];
     [provisioningPathField setEnabled:YES];
+    
+    [entitlementBrowseButton setEnabled:YES];
+    [watchAppEntitlementField setEnabled:YES];
+    [watchEntitlementBrowseButton setEnabled:YES];
+    [watchExtensionEntitlementField setEnabled:YES];
+    [watchExtensionEntitlementBrowseButton setEnabled:YES];
+    
+    [watchAppProvisioningPathField setEnabled:YES];
+    [watchAppProvisioningBrowseButton setEnabled:YES];
+    [watchExtensionProvisioningPathField setEnabled:YES];
+    [watchExtensionProvisioningBrowseButton setEnabled:YES];
+    
     [changeBundleIDCheckbox setEnabled:YES];
     [bundleIDField setEnabled:changeBundleIDCheckbox.state == NSOnState];
     [certComboBox setEnabled:YES];
