@@ -26,6 +26,11 @@ static NSString *kProductsDirName                   = @"Products";
 static NSString *kInfoPlistFilename                 = @"Info.plist";
 static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
 
+
+static NSString *appEntitlementFile = @"entitlement.plist";
+static NSString *watchAppEntitlementFile = @"watchAppEntitlement.plist";
+static NSString *watchExtensionEntitlementFile = @"watchExtensionEntitlement.plist";
+
 @interface iReSignAppDelegate(){
     iReSignAndVerify *signWatchExtensionObject;
     iReSignAndVerify *signWatchKitAppObject;
@@ -33,6 +38,8 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
 }
 
 @end
+
+
 @implementation iReSignAppDelegate
 
 @synthesize window,workingPath;
@@ -529,16 +536,16 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
         NSString *watchExtensionPath = [self watchExtensionFilePath];
         if(watchExtensionPath && [[watchExtensionEntitlementField stringValue] isEqualToString:@""]){
             // Generate watch extension entitlement file;
-            [self generateEntitlementFileFrom:watchExtensionProvisioningPathField.stringValue withName:@"watchExtensionEntitlement.plist"  pathWriteTo:watchExtensionEntitlementField];
+            [self generateEntitlementFileFrom:watchExtensionProvisioningPathField.stringValue withName:watchExtensionEntitlementFile  pathWriteTo:watchExtensionEntitlementField];
         }
         NSString *watchAppPath = [self watchAppFilePath];
         if(watchAppPath && [[watchAppEntitlementField stringValue] isEqualToString:@""]){
-            [self generateEntitlementFileFrom:watchAppProvisioningPathField.stringValue withName:@"watchAppEntitlement.plist" pathWriteTo:watchAppEntitlementField];
+            [self generateEntitlementFileFrom:watchAppProvisioningPathField.stringValue withName:watchAppEntitlementFile pathWriteTo:watchAppEntitlementField];
         }
     }
     
     if ([self appFilePath] && [[entitlementField stringValue] isEqualToString:@""]) {
-        [self generateEntitlementFileFrom:provisioningPathField.stringValue withName:@"entitlement.plist" pathWriteTo:entitlementField];
+        [self generateEntitlementFileFrom:provisioningPathField.stringValue withName:appEntitlementFile pathWriteTo:entitlementField];
     }
     
     [self doCodeSigning];
@@ -714,6 +721,20 @@ static NSString *kiTunesMetadataFileName            = @"iTunesMetadata";
 
 - (void)doZip {
     if ([self appFilePath]) {
+        
+        NSString *appEntitlementFilePath = [workingPath stringByAppendingPathComponent:appEntitlementFile];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:appEntitlementFilePath]) {
+            [[NSFileManager defaultManager] removeItemAtPath:appEntitlementFilePath error:nil];
+        }
+        NSString *watchAppEntitlementPath = [workingPath stringByAppendingPathComponent:watchAppEntitlementFile];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:watchAppEntitlementPath]) {
+            [[NSFileManager defaultManager] removeItemAtPath:watchAppEntitlementPath error:nil];
+        }
+        NSString *watchExtensionEntitlementPath = [workingPath stringByAppendingPathComponent:watchExtensionEntitlementFile];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:watchExtensionEntitlementPath]) {
+            [[NSFileManager defaultManager] removeItemAtPath:watchExtensionEntitlementPath error:nil];
+        }
+        
         NSArray *destinationPathComponents = [sourcePath pathComponents];
         NSString *destinationPath = @"";
         
